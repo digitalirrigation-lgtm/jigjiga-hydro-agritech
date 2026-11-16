@@ -72,9 +72,10 @@ farm_plots = pd.DataFrame({
     'Longitude': [42.8091, 42.8088, 42.8094, 42.8085],
     'Crop Sector': ['North Field (Wheat)', 'South Campus Plot', 'East Extension Field', 'West Boundary Fence'],
     'Health Classification': ['Healthy 🟢', 'Optimal Growth 🟢', 'Water Stressed 🟡', 'Critical Dry 🔴'],
-    'Color Indicator': ['#10B981', '#3B82F6', '#F59E0B', '#EF4444'], # International HEX code mappings
+    'Color Indicator': ['#10B981', '#3B82F6', '#F59E0B', '#EF4444'],  # International HEX code mappings
     'NDVI Index Range': [0.72, 0.68, 0.41, 0.18],
-    'Recommended Intervention': ['Operational routine', 'Operational routine', 'Increase drip frequency', 'Execute immediate flood irrigation']
+    'Recommended Intervention': ['Operational routine', 'Operational routine', 'Increase drip frequency', 'Execute immediate flood irrigation'],
+    'Marker Size': [15, 15, 15, 15]  # ✅ FIX: size must be a column name, not a list
 })
 
 # Render the high-resolution Plotly scatter map box
@@ -84,7 +85,7 @@ fig_map = px.scatter_mapbox(
     lon="Longitude",
     color="Health Classification",
     color_discrete_sequence=farm_plots['Color Indicator'].unique(),
-    size=[15, 15, 15, 15],
+    size="Marker Size",              # ✅ FIX: reference column by name
     hover_name="Crop Sector",
     hover_data=["NDVI Index Range", "Recommended Intervention"],
     zoom=16,
@@ -92,7 +93,7 @@ fig_map = px.scatter_mapbox(
 )
 fig_map.update_layout(
     mapbox_style="open-street-map",
-    margin={"r":0,"t":0,"l":0,"b":0},
+    margin={"r": 0, "t": 0, "l": 0, "b": 0},
     legend=dict(yanchor="top", y=0.99, xanchor="left", x=0.01)
 )
 st.plotly_chart(fig_map, use_container_width=True)
@@ -107,9 +108,13 @@ rain = np.random.gamma(shape=2, scale=4, size=30)
 runoff = [((P - 5) ** 2) / (P + 20) if P > 5 else 0.0 for P in rain]
 df_hydro = pd.DataFrame({"Date": dates, "Precipitation (mm)": rain, "Surface Runoff (mm)": runoff})
 
-fig_hydro = px.line(df_hydro, x="Date", y=["Precipitation (mm)", "Surface Runoff (mm)"], 
-                    color_discrete_sequence=["#2563EB", "#DC2626"])
-fig_hydro.update_layout(margin={"r":0,"t":20,"l":0,"b":0})
+fig_hydro = px.line(
+    df_hydro,
+    x="Date",
+    y=["Precipitation (mm)", "Surface Runoff (mm)"],
+    color_discrete_sequence=["#2563EB", "#DC2626"]
+)
+fig_hydro.update_layout(margin={"r": 0, "t": 20, "l": 0, "b": 0})
 st.plotly_chart(fig_hydro, use_container_width=True)
 
 # ==============================================================================
@@ -124,7 +129,13 @@ with col1:
         "Hourly Interval": ["Morning (08:00)", "Afternoon (13:00)", "Evening (18:00)"],
         "ET Rate (mm/hr)": [1.2, 4.8, 2.1]
     })
-    fig_et = px.bar(et_df, x="Hourly Interval", y="ET Rate (mm/hr)", color="ET Rate (mm/hr)", color_continuous_scale="Blues")
+    fig_et = px.bar(
+        et_df,
+        x="Hourly Interval",
+        y="ET Rate (mm/hr)",
+        color="ET Rate (mm/hr)",
+        color_continuous_scale="Blues"
+    )
     st.plotly_chart(fig_et, use_container_width=True)
 
 with col2:
@@ -150,7 +161,7 @@ for _, r in df_ai.iterrows():
     else:
         risk_status = "✅ Normal Threshold" if st.session_state.lang == "English" else "✅ Xaalad Caadi Ah"
         action_desc = "Maintain standard campus irrigation networks." if st.session_state.lang == "English" else "Sii wad nidaamka waraabka caadiga ah ee dhismaha jaamacadda."
-        
+
     st.markdown(f"**Year {int(r['Year'])}:** `{risk_status}` | *Strategic Protocol:* {action_desc}")
 
 st.markdown("---")
