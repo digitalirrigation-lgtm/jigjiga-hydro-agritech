@@ -10,7 +10,6 @@ import ee
 # ==============================================================================
 st.set_page_config(page_title="Jigjiga Hydro-Agritech Intelligence Hub", layout="wide")
 
-# Persistent Language Toggle
 if "lang" not in st.session_state:
     st.session_state.lang = "English"
 
@@ -18,7 +17,6 @@ c_lang1, c_lang2 = st.columns([8, 2])
 with c_lang2:
     st.session_state.lang = st.selectbox("🌐 Interface Language / Luqadda", ["English", "Af-Soomaali"])
 
-# Translation Strings Dictionary
 TEXT = {
     "English": {
         "title": "🌊 Jigjiga Hydro-Agritech Intelligence Platform",
@@ -54,52 +52,50 @@ TEXT = {
 
 L = TEXT[st.session_state.lang]
 
-# Top Navigation Layout
 st.title(L["title"])
 st.markdown(f"**{L['subtitle']}**")
 st.markdown(f"`{L['coordinates']}`")
 st.caption(L["gee_status"])
 
 # ==============================================================================
-# 2. CROP HEALTH GEOSPATIAL MAP REFACTOR (GREEN / YELLOW / RED)
+# 2. CROP HEALTH GEOSPATIAL MAP (MapLibre / scatter_map)
 # ==============================================================================
 st.header(L["map_title"])
 st.write(L["map_desc"])
 
-# Precise coordinate array generating a simulated 4-plot farm around the college boundary
 farm_plots = pd.DataFrame({
     'Latitude':  [9.3542, 9.3539, 9.3545, 9.3540],
     'Longitude': [42.8091, 42.8088, 42.8094, 42.8085],
     'Crop Sector': ['North Field (Wheat)', 'South Campus Plot', 'East Extension Field', 'West Boundary Fence'],
     'Health Classification': ['Healthy 🟢', 'Optimal Growth 🟢', 'Water Stressed 🟡', 'Critical Dry 🔴'],
-    'Color Indicator': ['#10B981', '#3B82F6', '#F59E0B', '#EF4444'],  # International HEX code mappings
+    'Color Indicator': ['#10B981', '#3B82F6', '#F59E0B', '#EF4444'],
     'NDVI Index Range': [0.72, 0.68, 0.41, 0.18],
     'Recommended Intervention': ['Operational routine', 'Operational routine', 'Increase drip frequency', 'Execute immediate flood irrigation'],
-    'Marker Size': [15, 15, 15, 15]  # ✅ FIX: size must be a column name, not a list
+    'Marker Size': [15, 15, 15, 15]
 })
 
-# Render the high-resolution Plotly scatter map box
-fig_map = px.scatter_mapbox(
+# ✅ Key fix: scatter_mapbox → scatter_map
+fig_map = px.scatter_map(
     farm_plots,
     lat="Latitude",
     lon="Longitude",
     color="Health Classification",
     color_discrete_sequence=farm_plots['Color Indicator'].unique(),
-    size="Marker Size",              # ✅ FIX: reference column by name
+    size="Marker Size",
     hover_name="Crop Sector",
     hover_data=["NDVI Index Range", "Recommended Intervention"],
     zoom=16,
     height=450
 )
 fig_map.update_layout(
-    mapbox_style="open-street-map",
+    map_style="open-street-map",   # ✅ mapbox_style → map_style
     margin={"r": 0, "t": 0, "l": 0, "b": 0},
     legend=dict(yanchor="top", y=0.99, xanchor="left", x=0.01)
 )
 st.plotly_chart(fig_map, use_container_width=True)
 
 # ==============================================================================
-# 3. HYDROLOGY MATRIX (SWAT / HEC-HMS)
+# 3. HYDROLOGY MATRIX
 # ==============================================================================
 st.header(L["hydrology_title"])
 dates = pd.date_range(end=datetime.date.today(), periods=30)
@@ -108,17 +104,13 @@ rain = np.random.gamma(shape=2, scale=4, size=30)
 runoff = [((P - 5) ** 2) / (P + 20) if P > 5 else 0.0 for P in rain]
 df_hydro = pd.DataFrame({"Date": dates, "Precipitation (mm)": rain, "Surface Runoff (mm)": runoff})
 
-fig_hydro = px.line(
-    df_hydro,
-    x="Date",
-    y=["Precipitation (mm)", "Surface Runoff (mm)"],
-    color_discrete_sequence=["#2563EB", "#DC2626"]
-)
+fig_hydro = px.line(df_hydro, x="Date", y=["Precipitation (mm)", "Surface Runoff (mm)"],
+                    color_discrete_sequence=["#2563EB", "#DC2626"])
 fig_hydro.update_layout(margin={"r": 0, "t": 20, "l": 0, "b": 0})
 st.plotly_chart(fig_hydro, use_container_width=True)
 
 # ==============================================================================
-# 4. AGRITECH INTERFACE WORKSPACE (CROPWAT / AQUACROP)
+# 4. AGRITECH INTERFACE
 # ==============================================================================
 st.header(L["agritech_title"])
 col1, col2 = st.columns(2)
@@ -129,13 +121,7 @@ with col1:
         "Hourly Interval": ["Morning (08:00)", "Afternoon (13:00)", "Evening (18:00)"],
         "ET Rate (mm/hr)": [1.2, 4.8, 2.1]
     })
-    fig_et = px.bar(
-        et_df,
-        x="Hourly Interval",
-        y="ET Rate (mm/hr)",
-        color="ET Rate (mm/hr)",
-        color_continuous_scale="Blues"
-    )
+    fig_et = px.bar(et_df, x="Hourly Interval", y="ET Rate (mm/hr)", color="ET Rate (mm/hr)", color_continuous_scale="Blues")
     st.plotly_chart(fig_et, use_container_width=True)
 
 with col2:
@@ -144,7 +130,7 @@ with col2:
     st.dataframe(clean_report, hide_index=True, use_container_width=True)
 
 # ==============================================================================
-# 5. PREDICTIVE INSIGHTS PIPELINE (TENSORFLOW AI)
+# 5. PREDICTIVE INSIGHTS
 # ==============================================================================
 st.header(L["predictive_title"])
 years = [2026, 2027, 2028, 2029, 2030, 2031]
